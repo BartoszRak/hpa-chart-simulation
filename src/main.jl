@@ -1,18 +1,5 @@
-include("add.jl")
 include("time.jl")
-include("plots_engine.jl")
 include("visual.jl")
-
-# using ArrayUtils
-
-# a = ArrayUtils.fillUpArray([1,2,3], 5)
-
-# using GLMakie
-# GLMakie.activate!(title = "Custom title", fxaa = false)
-# f = Figure(backgroundcolor = :tomato)
-# scene = Scene(backgroundcolor=:gray)
-# subwindow = Scene(scene, px_area=Rect(100, 100, 200, 200), clear=true, backgroundcolor=:white)
-# display(f)
 
 println("=== START ===")
 
@@ -54,9 +41,6 @@ while iteration < 100
     Time.displayPoint(newPoint)
     Time.pushPoint(timeline, newPoint)
 
-    # currentPlot = PlotsEngine.create_plot()
-    # PlotsEngine.updatePlot(currentPlot, timeline)
-    # PlotsEngine.displayPlot(currentPlot)
     rerender()
 
     sleep(0.5)
