@@ -11,15 +11,22 @@ struct ControlCallbacks
     onPause::Any
 end
 
-function render(timeline::Time.Timeline, callbacks::ControlCallbacks)
+struct ControlSlider
+    label::String
+    range::Any
+    startValue::Any
+    onChange::Any
+end
+
+function render(timeline::Time.Timeline, callbacks::ControlCallbacks, sliders::Array{ControlSlider}=[])
     GLMakie.activate!(title="Custom title", fxaa=false)
     f = Figure(backgroundcolor=:tomato)
 
     content = f[2, 1] = GridLayout()
     footer = f[3, 1] = GridLayout()
 
-    series, x = createChart(content, timeline)
-    createControls(footer, callbacks)
+    series, x = createChart(f, content, timeline)
+    createControls(footer, callbacks, sliders)
 
     display(f)
 
@@ -31,8 +38,9 @@ function render(timeline::Time.Timeline, callbacks::ControlCallbacks)
     return rerender
 end
 
-function createChart(content, timeline::Time.Timeline)
-    ax = Axis(content[1, 1], height=400, width=400, xlabel="Time")
+function createChart(fig, content, timeline::Time.Timeline)
+    ax = Axis(content[1, 1], height=600, width=600, xlabel="Time", yminorticksvisible=true, yminorgridvisible=true,
+        yminorticks=IntervalsBetween(5))
     x = Observable([range(1, timeline.pointsLimit, length=timeline.pointsLimit)...])
 
     y1Data = ArrayUtils.enforceSize(Time.getPointsReplicas(timeline), timeline.pointsLimit)
@@ -44,10 +52,13 @@ function createChart(content, timeline::Time.Timeline)
     y3 = Observable(y3Data)
     y4 = Observable(y4Data)
 
-    lines!(ax, x, y1)
-    lines!(ax, x, y2)
-    lines!(ax, x, y3)
-    lines!(ax, x, y4)
+    lines!(ax, x, y1, label="Current replicas", color=:green)
+    lines!(ax, x, y2, label="Pods efficiency", color=:blue)
+    lines!(ax, x, y3, label="Workload", color=:red)
+    lines!(ax, x, y4, label="Avg workload", color=:orange)
+    axislegend()
+
+    # fig[1, 2] = Legend(content, ax, "Legend", framevisible=false)
 
     return (y1, y2, y3, y4), x
 end
@@ -72,10 +83,26 @@ function updateChart(timeline::Time.Timeline, series::Any, x::Any)
     end
 end
 
-function createControls(footer, callbacks::ControlCallbacks)
-    startButton = Button(footer[1, 1], label="Start")
-    pauseButton = Button(footer[1, 2], label="Pause")
-    stopButton = Button(footer[1, 3], label="Stop")
+function createControls(footer, callbacks::ControlCallbacks, sliders::Array{ControlSlider})
+    if length(sliders) != 0
+        preparedSliders = map(specificSlider -> ((label=specificSlider.label, range=specificSlider.range, startvalue=specificSlider.startValue)), sliders)
+        sg = SliderGrid(footer[1, 2], #width=500,
+            preparedSliders...,
+            width=500
+        )
+        index = 1
+        for specificSlider in sliders
+            on(sg.sliders[index].value) do value
+                specificSlider.onChange(value)
+            end
+
+            index += 1
+        end
+    end
+
+    startButton = Button(footer[2, 1], label="Start")
+    pauseButton = Button(footer[2, 2], label="Pause")
+    stopButton = Button(footer[2, 3], label="Stop")
 
     if !isnothing(callbacks.onStart)
         on(startButton.clicks) do c

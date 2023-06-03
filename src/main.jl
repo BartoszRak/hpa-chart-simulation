@@ -25,9 +25,36 @@ function onPause()
     global paused = true
 end
 
-rerender = Visual.render(timeline, Visual.ControlCallbacks(onStart, onStop, onPause))
+sliders = [
+    Visual.ControlSlider(
+        "Pod efficiency",
+        20:10:500,
+        20,
+        value -> timeline.podEfficiency = value
+    ),
+    Visual.ControlSlider(
+        "Natural growth",
+        100:100:10000,
+        1000,
+        value -> timeline.naturalGrowth = value
+    ),
+    Visual.ControlSlider(
+        "Min. pods",
+        50:1:300,
+        50,
+        value -> timeline.minPods = value
+    ),
+    Visual.ControlSlider(
+        "Max. pods",
+        50:1:300,
+        150,
+        value -> timeline.maxPods = value
+    )
+]
 
-while iteration < 100
+rerender = Visual.render(timeline, Visual.ControlCallbacks(onStart, onStop, onPause), sliders)
+
+while true
     if paused
         sleep(0.5)
         continue
@@ -37,7 +64,7 @@ while iteration < 100
     println("###############################################################")
     println("--- ID: $(iteration) / points count: $(pointsCount)")
 
-    newPoint = Time.generateNewPoint(timeline, iteration, 1000)
+    newPoint = Time.generateNewPoint(timeline, iteration)
     Time.displayPoint(newPoint)
     Time.pushPoint(timeline, newPoint)
 

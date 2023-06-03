@@ -31,6 +31,7 @@ mutable struct Timeline
     scaleUpBy::Integer
     scaleDownBy::Integer
     pointsLimit::Integer
+    naturalGrowth::Integer
 
     function Timeline(
         initialId::Integer,
@@ -42,26 +43,24 @@ mutable struct Timeline
         scaleUpBy::Union{Integer,Nothing}=10,
         scaleDownBy::Union{Integer,Nothing}=10,
         pointsLimit::Union{Integer,Nothing}=50,
-
-        # points::Union{Array{TimePoint}, Nothing} = convert(Array{TimePoint}, [])
+        naturalGrowth::Integer=1000
     )
         initialPoints = [
             TimePoint(initialId, initialWorkload, minPods)
         ]
-        return new(minPods, maxPods, podEfficiency, targetAvgWorkload, initialPoints, scaleUpBy, scaleDownBy, pointsLimit)
+        return new(minPods, maxPods, podEfficiency, targetAvgWorkload, initialPoints, scaleUpBy, scaleDownBy, pointsLimit, naturalGrowth)
     end
 end
 
-function generateNewPoint(timeline::Timeline, id::Integer, naturalGrowth::Integer)
+function generateNewPoint(timeline::Timeline, id::Integer)
     println(
         Crayon(foreground=:green),
         "=> Generate point",
         Crayon(reset=true)
     )
     lastPoints = getLastPoints(timeline, 4)
-    # println("--- last points $(length(lastPoints))")
     singleLastPoint = last(lastPoints)
-    newWorkload = singleLastPoint.workload + naturalGrowth - (timeline.podEfficiency * singleLastPoint.currentReplicas)
+    newWorkload = singleLastPoint.workload + timeline.naturalGrowth - (timeline.podEfficiency * singleLastPoint.currentReplicas)
     shouldBeScaledUp = all(point -> begin
             doesHitTarget = point.avgWorkload > timeline.targetAvgWorkload
             println(
@@ -107,7 +106,6 @@ function getLastPoints(timeline::Timeline, count::Integer)
     allPoints = getPoints(timeline)
     lastIndex = length(allPoints)
     firstIndex = lastIndex > count ? lastIndex - count + 1 : 1
-    # println("### Acessing $firstIndex, $lastIndex")
     return allPoints[firstIndex:lastIndex]
 end
 
