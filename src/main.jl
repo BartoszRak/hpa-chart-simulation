@@ -3,6 +3,10 @@ include("time.jl")
 include("plots_engine.jl")
 include("visual.jl")
 
+# using ArrayUtils
+
+# a = ArrayUtils.fillUpArray([1,2,3], 5)
+
 # using GLMakie
 # GLMakie.activate!(title = "Custom title", fxaa = false)
 # f = Figure(backgroundcolor = :tomato)
@@ -34,7 +38,7 @@ function onPause()
     global paused = true
 end
 
-Visual.render(timeline, Visual.ControlCallbacks(onStart, onStop, onPause))
+rerender = Visual.render(timeline, Visual.ControlCallbacks(onStart, onStop, onPause))
 
 while iteration < 100
     if paused
@@ -50,11 +54,12 @@ while iteration < 100
     Time.displayPoint(newPoint)
     Time.pushPoint(timeline, newPoint)
 
-    currentPlot = PlotsEngine.create_plot()
-    PlotsEngine.updatePlot(currentPlot, timeline)
-    PlotsEngine.displayPlot(currentPlot)
+    # currentPlot = PlotsEngine.create_plot()
+    # PlotsEngine.updatePlot(currentPlot, timeline)
+    # PlotsEngine.displayPlot(currentPlot)
+    rerender()
 
-    sleep(1)
+    sleep(0.5)
 end
 
 println("=== END ===")
